@@ -15,6 +15,7 @@ import { Button } from '../components/ui/button'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import appCss from '../styles.css?url'
+import { getServerTheme } from '../server/theme'
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -23,6 +24,12 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  beforeLoad: async () => {
+    // Fetch theme from cookie on server for SSR
+    const theme = await getServerTheme()
+    return { theme }
+  },
+
   head: () => ({
     meta: [
       {
@@ -63,10 +70,18 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // Get theme from route context (set by beforeLoad)
+  const { theme } = Route.useRouteContext()
+
+  // Determine className for HTML element
+  // For 'system' theme, we let the client script handle it since we can't detect system preference on server
+  const htmlClassName = theme === 'dark' ? 'dark' : undefined
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={htmlClassName} suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script src="/theme.js" />
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="ui-theme">

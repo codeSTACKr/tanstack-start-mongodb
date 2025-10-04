@@ -24,7 +24,7 @@ function Home() {
         <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
           Type-safe full-stack
           <br />
-          <span className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#00684A] to-[#00ED64] bg-clip-text text-transparent">
             todos with MongoDB
           </span>
         </h1>
@@ -35,7 +35,7 @@ function Home() {
         </p>
 
         <Link to="/todos">
-          <Button size="lg" className="group">
+          <Button size="lg" className="group bg-[#00ED64] hover:bg-[#00ED64]/90 text-[#001E2B]">
             View Demo
             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
@@ -48,8 +48,8 @@ function Home() {
           <HoverCard>
             <HoverCardTrigger asChild>
               <div className="p-6 rounded-xl border bg-card hover:shadow-lg hover:border-[#00ED64] transition-all">
-                <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                <div className="w-12 h-12 rounded-lg bg-[#00ED64]/10 flex items-center justify-center mb-4">
+                  <Shield className="w-6 h-6 text-[#00684A] dark:text-[#00ED64]" />
                 </div>
                 <h3 className="text-lg font-semibold text-card-foreground mb-2">
                   End-to-End Type Safety
@@ -75,8 +75,8 @@ function Home() {
           <HoverCard>
             <HoverCardTrigger asChild>
               <div className="p-6 rounded-xl border bg-card hover:shadow-lg hover:border-[#00ED64] transition-all">
-                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
-                  <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="w-12 h-12 rounded-lg bg-[#00ED64]/10 flex items-center justify-center mb-4">
+                  <Database className="w-6 h-6 text-[#00684A] dark:text-[#00ED64]" />
                 </div>
                 <h3 className="text-lg font-semibold text-card-foreground mb-2">
                   Serverless Optimized
@@ -104,8 +104,8 @@ function Home() {
           <HoverCard>
             <HoverCardTrigger asChild>
               <div className="p-6 rounded-xl border bg-card hover:shadow-lg hover:border-[#00ED64] transition-all">
-                <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4">
-                  <Zap className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="w-12 h-12 rounded-lg bg-[#00ED64]/10 flex items-center justify-center mb-4">
+                  <Zap className="w-6 h-6 text-[#00684A] dark:text-[#00ED64]" />
                 </div>
                 <h3 className="text-lg font-semibold text-card-foreground mb-2">
                   Smart Caching
@@ -132,25 +132,53 @@ function Home() {
         </div>
       </section>
 
-      {/* Tech Stack */}
-      <section className="border-t bg-secondary/30">
-        <div className="max-w-5xl mx-auto px-6 py-12">
-          <p className="text-center text-sm text-muted-foreground mb-6">Built with</p>
-          <div className="flex flex-wrap items-center justify-center gap-8 text-muted-foreground">
-            <span className="font-medium">TanStack Start</span>
-            <span>•</span>
-            <span className="font-medium">TanStack Router</span>
-            <span>•</span>
-            <span className="font-medium">TanStack Query</span>
-            <span>•</span>
-            <span className="font-medium">MongoDB</span>
-            <span>•</span>
-            <span className="font-medium">TypeScript</span>
-            <span>•</span>
-            <span className="font-medium">Tailwind CSS</span>
+      {/* Tech Stack Footer */}
+      <footer className="mt-12 border-t bg-gradient-to-b from-background to-secondary/20">
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="text-center mb-8">
+            <h3 className="text-lg font-semibold mb-2">Built with Modern Technologies</h3>
+            <p className="text-sm text-muted-foreground">A powerful stack for type-safe full-stack development</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <a
+              href="https://tanstack.com/start"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center p-4 rounded-lg bg-card/50 border border-border/50 hover:border-border hover:bg-card transition-all group cursor-pointer"
+            >
+              <span className="text-xs text-muted-foreground mb-1">Framework</span>
+              <span className="font-semibold text-sm group-hover:text-foreground transition-colors">TanStack Start</span>
+            </a>
+
+            <a
+              href="https://www.mongodb.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center p-4 rounded-lg bg-[#00ED64]/5 border border-[#00ED64]/20 hover:border-[#00ED64]/40 hover:bg-[#00ED64]/10 transition-all group cursor-pointer"
+            >
+              <span className="text-xs text-muted-foreground mb-1">Database</span>
+              <span className="font-bold text-sm group-hover:text-foreground transition-colors">MongoDB</span>
+            </a>
+
+            <a
+              href="https://www.typescriptlang.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center p-4 rounded-lg bg-card/50 border border-border/50 hover:border-border hover:bg-card transition-all group cursor-pointer"
+            >
+              <span className="text-xs text-muted-foreground mb-1">Language</span>
+              <span className="font-semibold text-sm group-hover:text-foreground transition-colors">TypeScript</span>
+            </a>
+          </div>
+
+          <div className="text-center pt-6 border-t border-border/50">
+            <p className="text-xs text-muted-foreground">
+              Demo application showcasing modern full-stack development patterns
+            </p>
           </div>
         </div>
-      </section>
+      </footer>
     </div>
   )
 }

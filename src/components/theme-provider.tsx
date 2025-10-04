@@ -17,6 +17,21 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
   undefined
 )
 
+// Cookie helpers
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(';').shift()
+}
+
+function setCookie(name: string, value: string): void {
+  if (typeof document === 'undefined') return
+  // Set cookie with 1 year expiry, accessible across the site
+  const maxAge = 60 * 60 * 24 * 365 // 1 year in seconds
+  document.cookie = `${name}=${value}; max-age=${maxAge}; path=/; samesite=lax`
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
@@ -26,7 +41,8 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(
     () => {
       if (typeof window === 'undefined') return defaultTheme
-      return (localStorage.getItem(storageKey) as Theme | null) ?? defaultTheme
+      const cookieTheme = getCookie(storageKey) as Theme | undefined
+      return cookieTheme ?? defaultTheme
     }
   )
 
@@ -51,7 +67,7 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme)
+      setCookie(storageKey, newTheme)
       setTheme(newTheme)
     },
   }
