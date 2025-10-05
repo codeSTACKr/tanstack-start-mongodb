@@ -9,7 +9,8 @@
     "test": "vitest run",
     "lint": "eslint",
     "format": "prettier",
-    "check": "prettier --write . && eslint --fix"
+    "check": "prettier --write . && eslint --fix",
+    "init-db": "node scripts/init-db.ts"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",

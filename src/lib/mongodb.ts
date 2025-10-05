@@ -86,32 +86,3 @@ export async function getTodosCollection(): Promise<Collection<Todo>> {
   const { db } = await connectToDatabase()
   return db.collection<Todo>('todos')
 }
-
-/**
- * Helper to ensure indexes are created
- *
- * IMPORTANT: This should be called during application initialization or deployment.
- *
- * For development, you can run this manually in a MongoDB shell or via a script:
- *
- * @example
- * // Create a script (e.g., scripts/init-db.ts) and run with: tsx scripts/init-db.ts
- * import { createIndexes } from './src/lib/mongodb'
- * await createIndexes()
- *
- * For production, call this during:
- * - Database migration scripts
- * - CI/CD deployment pipeline
- * - One-time setup script before first deployment
- *
- * MongoDB will create these indexes if they don't exist, so it's safe to call multiple times.
- */
-export async function createIndexes(): Promise<void> {
-  const collection = await getTodosCollection()
-
-  // Create indexes for common queries
-  await collection.createIndex({ createdAt: -1 })
-  await collection.createIndex({ completed: 1 })
-
-  console.log('✓ MongoDB indexes created successfully')
-}
