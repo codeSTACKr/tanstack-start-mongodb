@@ -27,11 +27,12 @@ const DB_NAME = 'tanstack-todos'
 
 // Connection configuration optimized for serverless
 const options = {
+  appName: 'devrel.template.tanstack-start-todo',
   maxPoolSize: 10, // Limit connection pool size for serverless
   minPoolSize: 1,
-  maxIdleTimeMS: 10000, // Close idle connections after 10s
+  maxIdleTimeMS: 5000, // Close idle connections after 5s
   serverSelectionTimeoutMS: 5000, // Timeout after 5s if can't find server
-  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+  socketTimeoutMS: 30000, // Close sockets after 30s of inactivity
 }
 
 // Global cache for MongoDB client (survives across serverless function invocations)

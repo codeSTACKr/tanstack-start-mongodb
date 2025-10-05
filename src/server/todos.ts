@@ -82,7 +82,7 @@ export const updateTodo = createServerFn({ method: 'POST' })
     }
 
     if (updates.title !== undefined) {
-      updateData.title = updates.title // Already trimmed by Zod
+      updateData.title = updates.title
     }
     if (updates.completed !== undefined) {
       updateData.completed = updates.completed
