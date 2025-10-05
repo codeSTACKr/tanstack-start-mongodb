@@ -9,6 +9,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { AlertCircle } from 'lucide-react'
 import Header from '../components/Header'
 import { ThemeProvider } from '../components/theme-provider'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import { Button } from '../components/ui/button'
 
@@ -38,6 +39,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         name: 'viewport',
         content: 'width=device-width, initial-scale=1',
+      },
+      {
+        name: 'color-scheme',
+        content: 'light dark',
       },
       {
         title: 'TanStack Start Starter',
@@ -73,32 +78,39 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   // Get theme from route context (set by beforeLoad)
   const { theme } = Route.useRouteContext()
 
-  // Determine className for HTML element
-  // For 'system' theme, we let the client script handle it since we can't detect system preference on server
-  const htmlClassName = theme === 'dark' ? 'dark' : undefined
+  // Determine className for HTML element based on SSR theme detection
+  // For 'system' theme, leave undefined - the blocking script will detect actual preference
+  const htmlClassName =
+    theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : undefined
 
   return (
     <html lang="en" className={htmlClassName} suppressHydrationWarning>
       <head>
         <HeadContent />
-        <script src="/theme.js" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){const e="ui-theme",t="; "+document.cookie,n=t.split("; "+e+"=");let o="system";if(2===n.length){const e=n.pop().split(";").shift();e&&(o=e)}const c=document.documentElement;if("dark"===o)c.classList.add("dark");else if("light"===o)c.classList.add("light");else if("system"===o){const e=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";c.classList.add(e)}})();`,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-          <Header />
-          {children}
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              TanStackQueryDevtools,
-            ]}
-          />
+          <ErrorBoundary>
+            <Header />
+            {children}
+            <TanStackDevtools
+              config={{
+                position: 'bottom-right',
+              }}
+              plugins={[
+                {
+                  name: 'Tanstack Router',
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                TanStackQueryDevtools,
+              ]}
+            />
+          </ErrorBoundary>
         </ThemeProvider>
         <Scripts />
       </body>

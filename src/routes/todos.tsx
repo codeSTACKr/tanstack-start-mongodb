@@ -1,7 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { TodoList } from '../components/TodoList'
+import { todoQueries } from '../queries/todos'
 
 export const Route = createFileRoute('/todos')({
+  // Prefetch todos data on the server for faster initial load
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(todoQueries.list()),
   component: TodosPage,
 })
 

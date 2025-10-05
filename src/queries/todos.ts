@@ -5,6 +5,9 @@
  * - Consistent query keys across the app
  * - Type-safe query functions using server functions
  * - Reusable queryOptions for hooks and mutations
+ *
+ * Note: For this simple demo with one query type, we use a flat structure.
+ * For apps with multiple resource types, consider a hierarchical factory pattern.
  */
 
 import { queryOptions } from '@tanstack/react-query'
@@ -16,19 +19,14 @@ import { getTodos } from '../server/todos'
  */
 export const todoQueries = {
   /**
-   * Base key for all todo queries
-   */
-  all: () => ['todos'] as const,
-
-  /**
    * Query configuration for fetching all todos
    * Uses server function for type-safe data fetching
    */
   list: () =>
     queryOptions({
-      queryKey: [...todoQueries.all(), 'list'],
+      queryKey: ['todos', 'list'] as const,
       queryFn: () => getTodos(),
-      staleTime: 1000 * 30, // Consider data fresh for 30 seconds
-      gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
+      // staleTime and gcTime are configured globally in root-provider.tsx
+      // Override here only if this query needs different settings
     }),
 }

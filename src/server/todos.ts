@@ -8,8 +8,13 @@
 import { createServerFn } from '@tanstack/react-start'
 import { ObjectId } from 'mongodb'
 import { getTodosCollection } from '../lib/mongodb'
-import { todoToResponse, validateTodoTitle } from '../lib/types'
-import type { CreateTodoRequest, TodoResponse, UpdateTodoRequest } from '../lib/types'
+import {
+  CreateTodoSchema,
+  DeleteTodoSchema,
+  UpdateTodoSchema,
+  todoToResponse,
+} from '../lib/types'
+import type { TodoResponse } from '../lib/types'
 
 /**
  * Get all todos
@@ -29,18 +34,13 @@ export const getTodos = createServerFn().handler(async () => {
  * Create a new todo
  */
 export const createTodo = createServerFn({ method: 'POST' })
-  .inputValidator((data: CreateTodoRequest) => {
-    if (!validateTodoTitle(data.title)) {
-      throw new Error('Title must be a non-empty string (max 500 characters)')
-    }
-    return data
-  })
-  .handler(async ({ data }: { data: CreateTodoRequest }) => {
+  .inputValidator(CreateTodoSchema)
+  .handler(async ({ data }) => {
     const collection = await getTodosCollection()
     const now = new Date()
 
     const newTodo = {
-      title: data.title.trim(),
+      title: data.title, // Already trimmed by Zod transform
       completed: false,
       createdAt: now,
       updatedAt: now,
@@ -63,21 +63,15 @@ export const createTodo = createServerFn({ method: 'POST' })
  * Update a todo
  */
 export const updateTodo = createServerFn({ method: 'POST' })
-  .inputValidator((data: UpdateTodoRequest & { id: string }) => {
-    if (!ObjectId.isValid(data.id)) {
-      throw new Error('Invalid ID format')
-    }
-    if (!data.title && data.completed === undefined) {
-      throw new Error('Must provide at least one field to update (title or completed)')
-    }
-    if (data.title !== undefined && !validateTodoTitle(data.title)) {
-      throw new Error('Title must be a non-empty string (max 500 characters)')
-    }
-    return data
-  })
-  .handler(async ({ data }: { data: UpdateTodoRequest & { id: string } }) => {
+  .inputValidator(UpdateTodoSchema)
+  .handler(async ({ data }) => {
     const collection = await getTodosCollection()
     const { id, ...updates } = data
+
+    // Ensure at least one field is being updated
+    if (!updates.title && updates.completed === undefined) {
+      throw new Error('Must provide at least one field to update (title or completed)')
+    }
 
     const updateData: {
       updatedAt: Date
@@ -88,7 +82,7 @@ export const updateTodo = createServerFn({ method: 'POST' })
     }
 
     if (updates.title !== undefined) {
-      updateData.title = updates.title.trim()
+      updateData.title = updates.title // Already trimmed by Zod
     }
     if (updates.completed !== undefined) {
       updateData.completed = updates.completed
@@ -109,15 +103,11 @@ export const updateTodo = createServerFn({ method: 'POST' })
 
 /**
  * Delete a todo
+ * Returns void on success
  */
 export const deleteTodo = createServerFn({ method: 'POST' })
-  .inputValidator((data: { id: string }) => {
-    if (!ObjectId.isValid(data.id)) {
-      throw new Error('Invalid ID format')
-    }
-    return data
-  })
-  .handler(async ({ data }: { data: { id: string } }) => {
+  .inputValidator(DeleteTodoSchema)
+  .handler(async ({ data }) => {
     const collection = await getTodosCollection()
     const result = await collection.deleteOne({ _id: new ObjectId(data.id) })
 
@@ -125,5 +115,6 @@ export const deleteTodo = createServerFn({ method: 'POST' })
       throw new Error(`Todo with id ${data.id} not found`)
     }
 
-    return { success: true }
+    // Return void for consistency with mutation hook type
+    return
   })

@@ -5,6 +5,7 @@
  * These types provide end-to-end type safety from database → API → frontend.
  */
 
+import { z } from 'zod'
 import type { ObjectId } from 'mongodb'
 
 /**
@@ -55,6 +56,46 @@ export interface ApiError {
 }
 
 /**
+ * Zod Schemas for Runtime Validation
+ */
+
+/**
+ * Schema for creating a new todo
+ */
+export const CreateTodoSchema = z.object({
+  title: z
+    .string()
+    .min(1, 'Title must not be empty')
+    .max(500, 'Title must be less than 500 characters')
+    .transform((val) => val.trim()),
+})
+
+/**
+ * Schema for updating a todo
+ */
+export const UpdateTodoSchema = z.object({
+  id: z.string().refine((val) => /^[0-9a-fA-F]{24}$/.test(val), {
+    message: 'Invalid ID format',
+  }),
+  title: z
+    .string()
+    .min(1, 'Title must not be empty')
+    .max(500, 'Title must be less than 500 characters')
+    .transform((val) => val.trim())
+    .optional(),
+  completed: z.boolean().optional(),
+})
+
+/**
+ * Schema for deleting a todo
+ */
+export const DeleteTodoSchema = z.object({
+  id: z.string().refine((val) => /^[0-9a-fA-F]{24}$/.test(val), {
+    message: 'Invalid ID format',
+  }),
+})
+
+/**
  * Helper to convert MongoDB Todo to API TodoResponse
  */
 export function todoToResponse(todo: Todo): TodoResponse {
@@ -65,13 +106,4 @@ export function todoToResponse(todo: Todo): TodoResponse {
     createdAt: todo.createdAt.toISOString(),
     updatedAt: todo.updatedAt.toISOString(),
   }
-}
-
-/**
- * Validation helper for todo title
- */
-export function validateTodoTitle(title: unknown): title is string {
-  return (
-    typeof title === 'string' && title.trim().length > 0 && title.length <= 500
-  )
 }
