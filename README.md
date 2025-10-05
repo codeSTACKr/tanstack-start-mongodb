@@ -28,7 +28,7 @@ A full-stack demonstration of **MongoDB** integration with **TanStack Start**, f
 
 ### Prerequisites
 
-- Node.js 18+ and pnpm installed
+- Node.js 22+ and pnpm installed
 - MongoDB instance (local or [MongoDB Atlas](https://cloud.mongodb.com))
 
 ### Installation
@@ -90,100 +90,6 @@ src/
     └── ui/                  # Shadcn components
 ```
 
-## 🔑 Key Patterns
-
-### MongoDB Connection (Serverless-Ready)
-
-```typescript
-// src/lib/mongodb.ts
-export async function connectToDatabase() {
-  // Reuses cached connection across serverless invocations
-  if (cached.client && cached.db) {
-    return { client: cached.client, db: cached.db }
-  }
-  // Creates new connection with optimal pool settings
-  const client = await MongoClient.connect(MONGODB_URI, {
-    maxPoolSize: 10, // Optimal for serverless
-    minPoolSize: 1,
-    maxIdleTimeMS: 10000,
-  })
-  // Cache for next invocation
-  cached.client = client
-  cached.db = client.db(DB_NAME)
-  return { client, db: cached.db }
-}
-```
-
-### Type-Safe Server Functions
-
-```typescript
-// src/server/todos.ts
-import { createServerFn } from '@tanstack/react-start'
-
-export const getTodos = createServerFn().handler(async () => {
-  const collection = await getTodosCollection()
-  const todos = await collection.find({}).sort({ createdAt: -1 }).toArray()
-  return todos.map(todoToResponse)
-})
-
-export const createTodo = createServerFn({ method: 'POST' })
-  .validator((data: CreateTodoRequest) => {
-    if (!validateTodoTitle(data.title)) {
-      throw new Error('Title must be a non-empty string')
-    }
-    return data
-  })
-  .handler(async ({ data }) => {
-    const collection = await getTodosCollection()
-    const result = await collection.insertOne({
-      title: data.title.trim(),
-      completed: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    return todoToResponse({ ...data, _id: result.insertedId })
-  })
-```
-
-### Optimistic Updates with TanStack Query
-
-```typescript
-// src/hooks/useTodos.ts
-import { updateTodo } from '../server/todos'
-
-export function useUpdateTodo() {
-  return useMutation({
-    mutationKey: ['todos', 'update'],
-    mutationFn: (data) => updateTodo({ data }),
-    onMutate: async ({ id, ...updates }) => {
-      // Cancel refetches
-      await queryClient.cancelQueries({ queryKey: todoQueries.list().queryKey })
-      // Snapshot for rollback
-      const previous = queryClient.getQueryData(todoQueries.list().queryKey)
-      // Optimistically update
-      queryClient.setQueryData(todoQueries.list().queryKey, (old) =>
-        old.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo)),
-      )
-      return { previous }
-    },
-    onError: (err, vars, context) => {
-      // Rollback on error
-      if (context?.previous) {
-        queryClient.setQueryData(todoQueries.list().queryKey, context.previous)
-      }
-    },
-    onSettled: (updatedTodo) => {
-      // Update cache with server response
-      if (updatedTodo) {
-        queryClient.setQueryData(todoQueries.list().queryKey, (old) =>
-          old.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo)),
-        )
-      }
-    },
-  })
-}
-```
-
 ## 📜 Available Scripts
 
 ```bash
@@ -194,16 +100,19 @@ pnpm test             # Run tests with Vitest
 pnpm lint             # Lint code
 pnpm format           # Format code with Prettier
 pnpm check            # Format and fix all issues
+pnpm init-db          # Initialize MongoDB indexes (run after first setup)
 ```
 
 ## 🌐 Deployment
 
-This application is serverless-ready and can be deployed to:
+This application is serverless-ready and optimized for TanStack Start's **official hosting partners**:
 
-- **[Vercel](https://vercel.com)** (recommended)
-- **[Netlify](https://netlify.com)**
-- **AWS Lambda**
-- Any Node.js hosting with MongoDB access
+- [Cloudflare Workers](https://workers.cloudflare.com/) 
+- [Netlify](https://netlify.com) 
+
+**Other supported platforms:**
+- [Vercel](https://vercel.com) 
+- Node.js hosting (Railway, Render, etc.)
 
 ### Environment Variables
 

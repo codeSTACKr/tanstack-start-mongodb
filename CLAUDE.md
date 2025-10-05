@@ -199,12 +199,16 @@ Setup in `src/router.tsx` with SSR-Query integration.
 
 ## Deployment
 
-This app is serverless-ready. Deploy to:
+This app is serverless-ready and optimized for TanStack Start's official hosting partners:
 
-- Vercel (recommended)
-- Netlify
+- **Cloudflare Workers** - Official partner with full integration
+- **Netlify** - Official partner with dedicated plugin (`@netlify/vite-plugin-tanstack-start`)
+
+**Other supported platforms:**
+- Vercel (via Nitro)
 - AWS Lambda
-- Any Node.js hosting with MongoDB access
+- Node.js hosting (Railway, Render, etc.)
+- Any platform with Node.js and MongoDB access
 
 **Environment Variables:**
 

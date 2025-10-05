@@ -40,7 +40,7 @@ export const createTodo = createServerFn({ method: 'POST' })
     const now = new Date()
 
     const newTodo = {
-      title: data.title, // Already trimmed by Zod transform
+      title: data.title,
       completed: false,
       createdAt: now,
       updatedAt: now,
