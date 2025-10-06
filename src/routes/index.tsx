@@ -1,25 +1,44 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowRight, Database, Shield, Zap } from 'lucide-react'
 import { Button } from '../components/ui/button'
+import { Badge } from '../components/ui/badge'
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '../components/ui/hover-card'
+import { checkMongoDBConnection } from '../server/mongodb-status'
 
 export const Route = createFileRoute('/')({
   component: Home,
 })
 
 function Home() {
+  const { data } = useSuspenseQuery({
+    queryKey: ['mongodb-connection-status'],
+    queryFn: () => checkMongoDBConnection(),
+    staleTime: 10000, // Check every 10 seconds
+    refetchInterval: 10000,
+  })
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       {/* Hero Section */}
       <section className="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border text-sm font-medium text-secondary-foreground mb-8">
+        <Badge
+          variant="secondary"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8"
+        >
           <Database className="w-4 h-4" />
           MongoDB + TanStack Start Demo
-        </div>
+          <Badge
+            variant={data.connected ? 'default' : 'destructive'}
+            className="ml-1"
+          >
+            {data.connected ? 'Connected' : 'Disconnected'}
+          </Badge>
+        </Badge>
 
         <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
           Type-safe full-stack
