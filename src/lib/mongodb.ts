@@ -18,10 +18,6 @@ import { MongoClient } from 'mongodb'
 import type { Collection, Db } from 'mongodb'
 import type { Todo } from './types'
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please add your MONGODB_URI to .env')
-}
-
 const MONGODB_URI = process.env.MONGODB_URI
 const DB_NAME = 'tanstack-todos'
 
@@ -49,6 +45,49 @@ const cached: CachedConnection = {
 }
 
 /**
+ * Parse MongoDB connection errors and return user-friendly messages
+ */
+function getConnectionErrorMessage(error: Error): string {
+  const errorMsg = error.message.toLowerCase()
+
+  // Authentication errors
+  if (errorMsg.includes('bad auth') || errorMsg.includes('authentication failed')) {
+    return 'Authentication failed'
+  }
+
+  // Network/DNS errors
+  if (errorMsg.includes('enotfound') || errorMsg.includes('getaddrinfo')) {
+    return 'Cannot reach MongoDB server'
+  }
+
+  // Timeout errors
+  if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+    return 'Connection timeout'
+  }
+
+  // IP whitelist errors (common with MongoDB Atlas)
+  if (errorMsg.includes('ip') && errorMsg.includes('not') && errorMsg.includes('whitelist')) {
+    return 'IP address not whitelisted'
+  }
+
+  // Connection string format errors
+  if (
+    errorMsg.includes('invalid connection string') ||
+    errorMsg.includes('uri must')
+  ) {
+    return 'Invalid connection string format'
+  }
+
+  // Server selection errors
+  if (errorMsg.includes('server selection')) {
+    return 'Cannot connect to MongoDB'
+  }
+
+  // Generic fallback
+  return 'MongoDB connection error'
+}
+
+/**
  * Get or create MongoDB connection
  * Uses singleton pattern to reuse connections across function invocations
  */
@@ -66,14 +105,27 @@ export async function connectToDatabase(): Promise<{
     return cached.promise
   }
 
-  // Create new connection
-  cached.promise = MongoClient.connect(MONGODB_URI, options).then((client) => {
-    const db = client.db(DB_NAME)
-    cached.client = client
-    cached.db = db
-    cached.promise = null
-    return { client, db }
-  })
+  // Check if MONGODB_URI is provided
+  if (!MONGODB_URI) {
+    throw new Error('Missing MONGODB_URI configuration')
+  }
+
+  // Create new connection with error handling
+  cached.promise = MongoClient.connect(MONGODB_URI, options)
+    .then((client) => {
+      const db = client.db(DB_NAME)
+      cached.client = client
+      cached.db = db
+      cached.promise = null
+      return { client, db }
+    })
+    .catch((error) => {
+      // Reset promise to allow retry
+      cached.promise = null
+      // Provide user-friendly error message
+      const message = getConnectionErrorMessage(error)
+      throw new Error(message)
+    })
 
   return cached.promise
 }

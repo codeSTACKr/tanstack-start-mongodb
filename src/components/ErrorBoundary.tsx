@@ -1,8 +1,8 @@
-import { Component  } from 'react'
+import { Component } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import { Button } from './ui/button'
-import type {ReactNode} from 'react';
+import type { ReactNode } from 'react'
 
 interface Props {
   children: ReactNode
@@ -12,6 +12,18 @@ interface Props {
 interface State {
   hasError: boolean
   error: Error | null
+}
+
+/**
+ * Get troubleshooting tips for MongoDB connection errors
+ */
+function getErrorTips(): Array<string> {
+  return [
+    'Check your MONGODB_URI in the .env file',
+    'Verify your MongoDB credentials (username/password)',
+    'Ensure your IP address is whitelisted in MongoDB Atlas',
+    'Confirm MongoDB server is running and accessible',
+  ]
 }
 
 /**
@@ -45,13 +57,22 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 max-w-md mx-auto">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 max-w-lg mx-auto">
           <Alert variant="destructive" className="border-2">
-            <AlertCircle className="h-5 w-5" />
-            <AlertTitle className="text-xl">Something went wrong</AlertTitle>
-            <AlertDescription className="mt-2">
-              <p className="mb-4">{this.state.error.message}</p>
-              <Button onClick={this.reset} variant="default" className="mt-2">
+            <AlertCircle />
+            <AlertTitle>
+              {this.state.error.message}
+            </AlertTitle>
+            <AlertDescription>
+              <p>Please check the following:</p>
+              <ul className="list-inside list-disc text-sm">
+                {getErrorTips().map((tip, index) => (
+                  <li key={index} className="leading-relaxed">
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+              <Button onClick={this.reset} variant="default" className="mt-4">
                 Try again
               </Button>
             </AlertDescription>

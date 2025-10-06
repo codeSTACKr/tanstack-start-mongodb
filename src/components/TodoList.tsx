@@ -1,4 +1,4 @@
-import { AlertCircle, CheckSquare } from 'lucide-react'
+import { CheckSquare } from 'lucide-react'
 import { useGetTodos } from '../hooks/useTodos'
 import {
   Card,
@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from './ui/card'
 import { Skeleton } from './ui/skeleton'
-import { Alert, AlertDescription, AlertTitle } from './ui/alert'
 import {
   Empty,
   EmptyDescription,
@@ -22,6 +21,9 @@ import { Badge } from './ui/badge'
 
 export function TodoList() {
   const { data: todos, isLoading, error } = useGetTodos()
+
+  // Throw error to be caught by ErrorBoundary
+  if (error) throw error
 
   const activeTodos = todos?.filter((todo) => !todo.completed) || []
   const completedTodos = todos?.filter((todo) => todo.completed) || []
@@ -44,16 +46,6 @@ export function TodoList() {
       </CardHeader>
       <CardContent className="space-y-4">
         <AddTodoForm />
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              Failed to load todos: {error.message}
-            </AlertDescription>
-          </Alert>
-        )}
 
         {isLoading && (
           <div className="space-y-3">
