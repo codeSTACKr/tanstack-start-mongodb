@@ -66,12 +66,12 @@ pnpx shadcn@latest add button    # Add individual components
 
 ### MongoDB Connection (`src/lib/mongodb.ts`)
 
-**Serverless-optimized connection pattern:**
+**Cloudflare Workers-optimized connection pattern:**
 
 - Singleton connection with global caching
 - Connection reuse across serverless invocations
-- Configured pool size: 10 connections (optimal for serverless)
-- Automatic idle connection cleanup (10s)
+- Minimal connection pooling: `maxPoolSize: 1`, `minPoolSize: 0` (Cloudflare Workers best practice)
+- Automatic idle connection cleanup (5s)
 - Type-safe collection accessors
 
 ```typescript
@@ -84,10 +84,16 @@ const collection = await getTodosCollection()
 
 **Best Practices Implemented:**
 
-- Connection pooling with appropriate limits
+- Minimal connection pooling optimized for Cloudflare Workers
 - Global variable caching for warm starts
-- Timeout configurations for serverless environments
+- Timeout configurations for serverless environments (5s server selection)
 - Promise caching for concurrent requests
+- Based on recommendations from [Cloudflare Workers + MongoDB guide](https://alexbevi.com/blog/2025/03/25/cloudflare-workers-and-mongodb/)
+
+**Performance Notes:**
+
+- Current implementation: ~300ms query latency (connection per request)
+- For 10x performance improvement (~35ms latency), consider implementing Durable Objects for persistent connections.
 
 ### Type System (`src/lib/types.ts`)
 
@@ -199,20 +205,41 @@ Setup in `src/router.tsx` with SSR-Query integration.
 
 ## Deployment
 
-This app is serverless-ready and optimized for TanStack Start's official hosting partners:
+This app is optimized specifically for **Cloudflare Workers** with MongoDB.
 
-- **Cloudflare Workers** - Official partner with full integration
-- **Netlify** - Official partner with dedicated plugin (`@netlify/vite-plugin-tanstack-start`)
+### Cloudflare Workers Deployment
 
-**Other supported platforms:**
-- Vercel (via Nitro)
-- AWS Lambda
-- Node.js hosting (Railway, Render, etc.)
-- Any platform with Node.js and MongoDB access
+**Configuration (`wrangler.jsonc`):**
 
-**Environment Variables:**
+- `compatibility_flags: ["nodejs_compat_v2"]` - Required for MongoDB driver support
+- `compatibility_date: "2025-09-02"` - Recent compatibility date
 
-- `MONGODB_URI` - MongoDB connection string (required)
+**MongoDB Connection Optimizations:**
+
+- Minimal connection pooling (`maxPoolSize: 1, minPoolSize: 0`)
+- Global connection caching for warm starts
+- 5-second server selection timeout
+- Based on [Cloudflare Workers + MongoDB best practices](https://alexbevi.com/blog/2025/03/25/cloudflare-workers-and-mongodb/)
+
+**Performance Considerations:**
+
+- Default setup: ~300ms query latency per request
+- For production with high traffic, consider implementing Durable Objects for 10x better performance (~35ms latency)
+- Durable Objects maintain connection state between requests, reducing connection overhead
+
+**Required Environment Variables:**
+
+- `MONGODB_URI` - MongoDB connection string (set in .env or Cloudflare dashboard)
+
+### Other Supported Platforms
+
+This app can also deploy to:
+- **Netlify** - Official TanStack Start partner with dedicated plugin
+- **Vercel** - Via Nitro adapter
+- **AWS Lambda** - Serverless deployment
+- **Node.js hosting** - Railway, Render, etc.
+
+**Note:** Connection pool settings in `src/lib/mongodb.ts` are optimized for Cloudflare Workers. Other platforms may benefit from different `maxPoolSize` values (typically 5-10).
 
 ## Testing
 

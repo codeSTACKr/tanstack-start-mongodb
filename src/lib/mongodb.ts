@@ -1,16 +1,16 @@
 /**
  * MongoDB Connection Singleton
  *
- * This module implements a connection pooling pattern optimized for serverless environments.
+ * This module implements a connection pooling pattern optimized for Cloudflare Workers.
  * Key features:
  * - Caches connection across invocations to prevent connection exhaustion
- * - Configures optimal pool size for serverless (typically 1-10 connections)
+ * - Minimal connection pooling (maxPoolSize: 1, minPoolSize: 0) as recommended for Cloudflare Workers
  * - Provides type-safe database and collection accessors
  *
- * Best Practices for Serverless:
- * 1. Reuse connections across function invocations
- * 2. Set appropriate maxPoolSize (lower for serverless)
- * 3. Enable connection monitoring for debugging
+ * Best Practices for Cloudflare Workers:
+ * 1. Reuse connections across function invocations via global caching
+ * 2. Use minimal pool size (maxPoolSize: 1, minPoolSize: 0)
+ * 3. For 10x better performance, consider implementing Durable Objects for connection persistence
  * 4. Handle connection errors gracefully
  */
 
@@ -21,14 +21,12 @@ import type { Todo } from './types'
 const MONGODB_URI = process.env.MONGODB_URI
 const DB_NAME = 'tanstack-todos'
 
-// Connection configuration optimized for serverless
+// Connection configuration optimized for Cloudflare Workers
 const options = {
   appName: 'devrel.template.tanstack-start-todo',
-  maxPoolSize: 10, // Limit connection pool size for serverless
-  minPoolSize: 1,
-  maxIdleTimeMS: 5000, // Close idle connections after 5s
+  maxPoolSize: 1, // Cloudflare Workers: Use minimal pooling (1 connection)
+  minPoolSize: 0, // Cloudflare Workers: No minimum connections
   serverSelectionTimeoutMS: 5000, // Timeout after 5s if can't find server
-  socketTimeoutMS: 30000, // Close sockets after 30s of inactivity
 }
 
 // Global cache for MongoDB client (survives across serverless function invocations)
