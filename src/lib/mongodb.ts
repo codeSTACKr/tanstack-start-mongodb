@@ -17,19 +17,9 @@
 import { MongoClient } from 'mongodb'
 import type { Collection, Db } from 'mongodb'
 import type { Todo } from './types'
+import { DB_NAME, COLLECTION_NAME, MONGODB_CONNECTION_CONFIG } from '../config/mongodb'
 
 const MONGODB_URI = process.env.MONGODB_URI
-const DB_NAME = 'tanstack-todos'
-
-// Connection configuration optimized for serverless
-const options = {
-  appName: 'devrel.template.tanstack-start-todo',
-  maxPoolSize: 10, // Limit connection pool size for serverless
-  minPoolSize: 1,
-  maxIdleTimeMS: 5000, // Close idle connections after 5s
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s if can't find server
-  socketTimeoutMS: 30000, // Close sockets after 30s of inactivity
-}
 
 // Global cache for MongoDB client (survives across serverless function invocations)
 interface CachedConnection {
@@ -111,7 +101,10 @@ export async function connectToDatabase(): Promise<{
   }
 
   // Create new connection with error handling
-  cached.promise = MongoClient.connect(MONGODB_URI, options)
+  cached.promise = MongoClient.connect(MONGODB_URI, {
+    appName: 'devrel.template.tanstack-start-todo',
+    ...MONGODB_CONNECTION_CONFIG,
+  })
     .then((client) => {
       const db = client.db(DB_NAME)
       cached.client = client
@@ -136,5 +129,5 @@ export async function connectToDatabase(): Promise<{
  */
 export async function getTodosCollection(): Promise<Collection<Todo>> {
   const { db } = await connectToDatabase()
-  return db.collection<Todo>('todos')
+  return db.collection<Todo>(COLLECTION_NAME)
 }
