@@ -8,6 +8,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import { AlertCircle } from 'lucide-react'
 import Header from '../components/Header'
+import { Footer } from '../components/Footer'
 import { ThemeProvider } from '../components/theme-provider'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
@@ -93,11 +94,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           }}
         />
       </head>
-      <body>
+      <body className="flex flex-col min-h-screen">
         <ThemeProvider defaultTheme="system" storageKey="ui-theme">
           <ErrorBoundary>
-            <Header />
-            {children}
+            <div className="flex flex-col flex-1">
+              <Header />
+              {children}
+              <Footer />
+            </div>
             <TanStackDevtools
               config={{
                 position: 'bottom-right',
