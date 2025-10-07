@@ -11,7 +11,7 @@ export const Route = createFileRoute('/todos')({
 
 function TodosPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 py-12 px-4">
+    <div className="flex-1 bg-gradient-to-b from-background to-secondary/20 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-3">Todo Demo</h1>

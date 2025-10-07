@@ -13,7 +13,7 @@ import { ThemeToggle } from './theme-toggle'
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full px-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
+      <div className="container flex h-14 min-w-full items-center">
         <Sheet>
           <SheetTrigger asChild className="mr-2 md:hidden">
             <Button variant="ghost" size="icon" aria-label="Open menu">
