@@ -1,5 +1,31 @@
 {
-  "name": "fresh-start",
+  "name": "tanstack-start-mongodb",
+  "version": "1.0.0",
+  "description": "MongoDB + TanStack Start demonstration application showcasing modern full-stack development patterns with serverless best practices",
+  "author": "MongoDB, Inc.",
+  "license": "MIT",
+  "homepage": "https://github.com/mongodb-developer/tanstack-start-mongodb#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mongodb-developer/tanstack-start-mongodb.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mongodb-developer/tanstack-start-mongodb/issues"
+  },
+  "keywords": [
+    "mongodb",
+    "tanstack",
+    "tanstack-start",
+    "tanstack-query",
+    "tanstack-router",
+    "react",
+    "typescript",
+    "serverless",
+    "full-stack",
+    "todo-app",
+    "tailwindcss",
+    "shadcn-ui"
+  ],
   "private": true,
   "type": "module",
   "scripts": {
