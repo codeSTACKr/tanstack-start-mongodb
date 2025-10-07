@@ -4,23 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **MongoDB + TanStack Start** demonstration application showcasing:
+This is a **MongoDB + TanStack Start** demonstration application showcasing modern full-stack development patterns with serverless best practices. The project serves as a reference implementation for integrating MongoDB with TanStack Start, featuring a fully-functional todo application with CRUD operations.
+
+**Key Features:**
 
 - Type-safe full-stack development with MongoDB (native driver, no ORM)
-- Serverless-optimized connection pooling
+- Serverless-optimized connection pooling and caching
 - End-to-end type safety from database to UI
-- TanStack Query with optimistic updates and caching
-- Complete CRUD operations with a todo app example
+- TanStack Query with optimistic updates and intelligent caching
+- Modern UI with dark/light/system theme support
+- Complete error handling and loading states
+- Production-ready deployment configurations for multiple platforms
 
 **Tech Stack:**
 
-- TanStack Start + Router (v1.132.0)
-- TanStack Query (v5.66.5)
-- MongoDB Native Driver (v6.12.0)
-- React 19
-- TypeScript
-- Tailwind CSS 4 + Shadcn components
-- Vitest for testing
+- **Framework**: TanStack Start + Router
+- **Data Fetching**: TanStack Query with SSR integration
+- **Database**: MongoDB Native Driver
+- **UI**: React 19, TypeScript, Tailwind CSS 4, Shadcn UI components
+- **Testing**: Vitest
+- **Validation**: Zod
 
 ## Setup
 
@@ -40,7 +43,7 @@ This is a **MongoDB + TanStack Start** demonstration application showcasing:
    ```bash
    pnpm dev
    ```
-   Runs on http://localhost:3000
+   Server runs on http://localhost:3000
 
 ## Commands
 
@@ -53,25 +56,40 @@ pnpm build            # Production build
 pnpm serve            # Preview production build
 
 # Code Quality
-pnpm test             # Run tests with Vitest
-pnpm lint             # Lint code
-pnpm format           # Format code
+pnpm lint             # Lint code with ESLint
+pnpm format           # Format code with Prettier
 pnpm check            # Format and fix linting issues
 
+# Database
+pnpm init-db          # Initialize MongoDB indexes
+
 # Shadcn Components
-pnpx shadcn@latest add button    # Add individual components
+pnpx shadcn@latest add <component>    # Add individual components
 ```
 
 ## Architecture
 
-### MongoDB Connection (`src/lib/mongodb.ts`)
+### MongoDB Configuration
 
-**Cloudflare Workers-optimized connection pattern:**
+**Configuration File**: `src/config/mongodb.ts`
 
-- Singleton connection with global caching
-- Connection reuse across serverless invocations
-- Minimal connection pooling: `maxPoolSize: 1`, `minPoolSize: 0` (Cloudflare Workers best practice)
-- Automatic idle connection cleanup (5s)
+Centralized configuration for MongoDB settings:
+- Database name: `tanstack-todos`
+- Collection name: `todos`
+- Connection pool settings optimized for serverless:
+  - `maxPoolSize: 10` - Moderate connection pool for serverless
+  - `minPoolSize: 1` - Maintain minimum connection
+  - `maxIdleTimeMS: 5000` - Close idle connections after 5s
+  - `serverSelectionTimeoutMS: 5000` - Timeout after 5s
+  - `socketTimeoutMS: 30000` - Close inactive sockets after 30s
+
+**Connection Singleton**: `src/lib/mongodb.ts`
+
+Implements serverless-optimized connection pattern:
+- Singleton connection with global caching across invocations
+- Connection reuse to prevent connection exhaustion
+- Promise caching for concurrent connection requests
+- User-friendly error message parsing
 - Type-safe collection accessors
 
 ```typescript
@@ -84,117 +102,142 @@ const collection = await getTodosCollection()
 
 **Best Practices Implemented:**
 
-- Minimal connection pooling optimized for Cloudflare Workers
-- Global variable caching for warm starts
-- Timeout configurations for serverless environments (5s server selection)
-- Promise caching for concurrent requests
-- Based on recommendations from [Cloudflare Workers + MongoDB guide](https://alexbevi.com/blog/2025/03/25/cloudflare-workers-and-mongodb/)
-
-**Performance Notes:**
-
-- Current implementation: ~300ms query latency (connection per request)
-- For 10x performance improvement (~35ms latency), consider implementing Durable Objects for persistent connections.
+- Global variable caching for warm starts in serverless
+- Appropriate connection pool limits for serverless environments
+- Timeout configurations optimized for serverless cold starts
+- Error handling with user-friendly messages
 
 ### Type System (`src/lib/types.ts`)
 
-End-to-end type safety:
+Complete end-to-end type safety with Zod validation:
 
+**Core Types:**
 - `Todo` - MongoDB document type (with ObjectId)
 - `TodoResponse` - API response type (ObjectId serialized to string)
-- `CreateTodoRequest` / `UpdateTodoRequest` - Request body types
-- Helper functions for type conversion and validation
+- `CreateTodoRequest` - Request body for creating todos
+- `UpdateTodoRequest` - Request body for updating todos
+- `ApiError` - Standardized error responses
+
+**Zod Schemas for Runtime Validation:**
+- `CreateTodoSchema` - Validates todo creation (1-500 chars, trimmed)
+- `UpdateTodoSchema` - Validates todo updates with ObjectId format check
+- `DeleteTodoSchema` - Validates ObjectId format for deletion
+
+**Helper Functions:**
+- `todoToResponse()` - Converts MongoDB Todo to API TodoResponse
 
 ### Server Functions (`src/server/todos.ts`)
 
 Type-safe server functions using TanStack Start's `createServerFn`:
 
-**`getTodos()`** - Fetch all todos (GET, sorted by creation date)
-**`createTodo({ data })`** - Create new todo (POST with validation)
-**`updateTodo({ data })`** - Update todo title or completed status (POST)
-**`deleteTodo({ data })`** - Delete todo by ID (POST)
+- **`getTodos()`** - Fetch all todos (GET, sorted by creation date descending)
+- **`createTodo({ data })`** - Create new todo (POST with Zod validation)
+- **`updateTodo({ data })`** - Update todo title or completed status (POST with Zod validation)
+- **`deleteTodo({ data })`** - Delete todo by ID (POST with Zod validation)
+
+**Additional Server Functions:**
+- `src/server/mongodb-status.ts` - MongoDB connection status check
+- `src/server/theme.ts` - Server-side theme detection from cookies
 
 **Features:**
 
 - Full TypeScript type safety with automatic inference
-- Built-in validation using `.validator()`
+- Built-in validation using `.inputValidator()` with Zod schemas
 - Proper error handling with typed responses
 - Direct MongoDB access without HTTP overhead
 - Seamless client-server communication
 
-### TanStack Query Integration (`src/hooks/useTodos.ts`)
+### TanStack Query Integration
 
-Custom hooks with advanced caching strategies:
+**Query Factory** (`src/queries/todos.ts`):
 
-**`useGetTodos()`**
+Centralized query definitions following best practices:
+- Consistent query keys: `['todos', 'list']`
+- Reusable `queryOptions` with type-safe server functions
+- Single source of truth for query configurations
 
-- `staleTime: 30s` - Data stays fresh for 30 seconds
+**Query Provider** (`src/integrations/tanstack-query/root-provider.tsx`):
+
+Default query client configuration:
+- `staleTime: 30s` - Data considered fresh for 30 seconds
 - `gcTime: 5min` - Cache retained for 5 minutes
-- Automatic refetching on window focus
+- `retry: 3` - Retry failed requests 3 times with exponential backoff
+- `refetchOnWindowFocus: true` - Automatic refetch on window focus
+- `refetchOnReconnect: true` - Refetch after network reconnection
 
-**`useCreateTodo()`, `useUpdateTodo()`, `useDeleteTodo()`**
+**Custom Hooks** (`src/hooks/useTodos.ts`):
 
+- **`useGetTodos()`** - Fetch todos with automatic caching
+- **`useCreateTodo()`** - Create todo with optimistic updates
+- **`useUpdateTodo()`** - Update todo with optimistic updates
+- **`useDeleteTodo()`** - Delete todo with optimistic updates
+
+All mutation hooks implement:
 - Optimistic updates for instant UI feedback
 - Automatic rollback on errors
-- Cache invalidation after mutations
+- Cache synchronization in `onSettled`
 - Proper error handling
 
 ### Components (`src/components/`)
 
-**`TodoList`** - Main container with loading states, empty states, and error handling
-**`TodoItem`** - Individual todo with checkbox and delete button
-**`AddTodoForm`** - Input form with validation
+**Main Components:**
+- **`TodoList.tsx`** - Main container with loading states, empty states, and error handling
+- **`TodoItem.tsx`** - Individual todo with checkbox and delete button
+- **`AddTodoForm.tsx`** - Input form with validation
+- **`Header.tsx`** - App header with navigation and theme toggle
+- **`ErrorBoundary.tsx`** - Global error boundary with MongoDB troubleshooting
+- **`theme-provider.tsx`** - Theme context provider (dark/light/system)
+- **`theme-toggle.tsx`** - Theme switcher component
 
-All components use Shadcn UI primitives (Card, Checkbox, Button, Input, Badge, Skeleton).
+**Shadcn UI Components** (`src/components/ui/`):
+Alert, Badge, Button, Card, Checkbox, Dropdown Menu, Empty, Hover Card, Input, Sheet, Skeleton
 
 ### File-Based Routing
 
-- `src/routes/__root.tsx` - Root layout with devtools
-- `src/routes/index.tsx` - Landing page
-- `src/routes/todos.tsx` - Todo demo page
+- `src/routes/__root.tsx` - Root layout with devtools, theme provider, and error boundary
+- `src/routes/index.tsx` - Landing page with feature showcase and MongoDB connection status
+- `src/routes/todos.tsx` - Todo demo page with SSR data prefetching
 
 Route tree auto-generated in `src/routeTree.gen.ts`.
 
-### Server Functions (`src/server/`)
+### Router Context & SSR Integration
 
-- `src/server/todos.ts` - Server-only functions for todo operations
-- Uses `createServerFn()` for type-safe server logic
-- Called directly from hooks and components
+**Router Setup** (`src/router.tsx`):
+- QueryClient passed through router context for SSR compatibility
+- `setupRouterSsrQueryIntegration` for seamless SSR + TanStack Query
+- Default preload strategy: `intent` (on hover/focus)
 
-### Router Context
-
-QueryClient is passed through router context for SSR compatibility:
-
+**Router Context Type:**
 ```typescript
 interface MyRouterContext {
   queryClient: QueryClient
 }
 ```
 
-Setup in `src/router.tsx` with SSR-Query integration.
-
 ### Path Aliases
 
 - `@/*` maps to `./src/*`
 - Configured in `tsconfig.json`
-- Enabled via `vite-tsconfig-paths` plugin
+- Enabled via `vite-tsconfig-paths` plugin in `vite.config.ts`
 
 ## Development Patterns
 
 ### Adding a New Todo Field
 
 1. Update `Todo` type in `src/lib/types.ts`
-2. Update `todoToResponse()` helper
-3. Modify server functions in `src/server/todos.ts`
-4. Update TanStack Query hooks in `src/hooks/useTodos.ts`
-5. Update UI components
+2. Update validation schemas (CreateTodoSchema, UpdateTodoSchema)
+3. Update `todoToResponse()` helper
+4. Modify server functions in `src/server/todos.ts`
+5. Update TanStack Query hooks in `src/hooks/useTodos.ts`
+6. Update UI components (`TodoItem.tsx`, `AddTodoForm.tsx`)
 
 ### MongoDB Best Practices
 
 - Always use the connection singleton from `src/lib/mongodb.ts`
-- Never create new MongoClient instances in routes
-- Use typed collection accessors
-- Index frequently queried fields (see `createIndexes()`)
-- Handle ObjectId conversions properly
+- Never create new MongoClient instances in routes or components
+- Use typed collection accessors (`getTodosCollection()`)
+- Handle ObjectId conversions properly using helper functions
+- Implement indexes for frequently queried fields
 
 ### Caching Strategy
 
@@ -202,45 +245,109 @@ Setup in `src/router.tsx` with SSR-Query integration.
 - Server functions eliminate HTTP overhead for internal calls
 - Optimistic updates for mutations with automatic rollback
 - `onSettled` callbacks ensure cache consistency
+- No redundant refetches - optimistic updates handle most cases
+
+### Theme System
+
+- SSR-compatible theme detection (dark/light/system)
+- Theme stored in cookies (`ui-theme`)
+- Blocking script in HTML to prevent theme flash
+- Theme toggle in header with smooth transitions
 
 ## Deployment
 
-This app is optimized specifically for **Cloudflare Workers** with MongoDB.
+This app is serverless-ready with **branch-specific configurations** for different deployment platforms:
 
-### Cloudflare Workers Deployment
+### Branch Structure
 
-**Configuration (`wrangler.jsonc`):**
+- **`main`** - Base implementation with generic serverless configuration
+- **`netlify`** - Netlify-specific deployment configuration
+- **`cloudflare`** - Cloudflare Workers basic deployment
+- **`cloudflare-durable-objects`** - Advanced Cloudflare deployment with Durable Objects
 
-- `compatibility_flags: ["nodejs_compat_v2"]` - Required for MongoDB driver support
-- `compatibility_date: "2025-09-02"` - Recent compatibility date
+### Netlify Branch (`netlify`)
 
-**MongoDB Connection Optimizations:**
+**Additional Files:**
+- `netlify.toml` - Netlify build configuration
 
-- Minimal connection pooling (`maxPoolSize: 1, minPoolSize: 0`)
-- Global connection caching for warm starts
-- 5-second server selection timeout
-- Based on [Cloudflare Workers + MongoDB best practices](https://alexbevi.com/blog/2025/03/25/cloudflare-workers-and-mongodb/)
+**Vite Plugin:**
+```typescript
+import netlify from '@netlify/vite-plugin-tanstack-start'
+plugins: [..., netlify()]
+```
 
-**Performance Considerations:**
+**Configuration:**
+- Build command: `vite build`
+- Publish directory: `dist/client`
+- Node version: 24
 
-- Default setup: ~300ms query latency per request
-- For production with high traffic, consider implementing Durable Objects for 10x better performance (~35ms latency)
-- Durable Objects maintain connection state between requests, reducing connection overhead
+**Official TanStack Start partner** with dedicated plugin support.
 
-**Required Environment Variables:**
+### Cloudflare Branch (`cloudflare`)
 
-- `MONGODB_URI` - MongoDB connection string (set in .env or Cloudflare dashboard)
+**Additional Files:**
+- `wrangler.jsonc` - Cloudflare Workers configuration
+
+**Vite Plugin:**
+```typescript
+import { cloudflare } from '@cloudflare/vite-plugin'
+plugins: [cloudflare({ viteEnvironment: { name: 'ssr' } }), ...]
+```
+
+**Wrangler Configuration:**
+- Compatibility date: `2025-09-02`
+- Compatibility flags: `["nodejs_compat"]`
+- Entry: `@tanstack/react-start/server-entry`
+
+**Official TanStack Start partner** with full Cloudflare Workers integration.
+
+### Cloudflare Durable Objects Branch (`cloudflare-durable-objects`)
+
+**Additional Files:**
+- `wrangler.jsonc` - Advanced Cloudflare configuration with Durable Objects
+- `src/server-entry.ts` - Custom server entry point
+- `src/server/mongodb-durable.ts` - Durable Object for MongoDB connection management
+
+**Advanced Features:**
+- MongoDB connection managed via Durable Objects for better state persistence
+- Custom fetch handler that bridges Cloudflare Workers with TanStack Start
+- Durable Object binding: `MONGODB_CONNECTION`
+
+**Use Case:**
+Ideal for production Cloudflare deployments requiring persistent MongoDB connections across multiple Workers instances.
 
 ### Other Supported Platforms
 
-This app can also deploy to:
-- **Netlify** - Official TanStack Start partner with dedicated plugin
-- **Vercel** - Via Nitro adapter
-- **AWS Lambda** - Serverless deployment
-- **Node.js hosting** - Railway, Render, etc.
+- **Vercel** - Standard serverless deployment
+- **AWS Lambda** - Standard serverless deployment
+- **Node.js hosting** - Railway, Render, Fly.io, etc.
+- Any platform with Node.js 22+ and MongoDB access
 
-**Note:** Connection pool settings in `src/lib/mongodb.ts` are optimized for Cloudflare Workers. Other platforms may benefit from different `maxPoolSize` values (typically 5-10).
+### Environment Variables
+
+**Required:**
+- `MONGODB_URI` - MongoDB connection string (required for all deployments)
 
 ## Testing
 
-- always lint before saying everything is working
+- Test framework: Vitest
+- Run tests: `pnpm test`
+- **IMPORTANT**: Always run `pnpm lint` before confirming work is complete
+- Tests should cover server functions, hooks, and component behavior
+
+## Configuration Files
+
+- `vite.config.ts` - Vite configuration with TanStack Start plugin
+- `tsconfig.json` - TypeScript configuration with strict mode
+- `eslint.config.js` - ESLint configuration
+- `prettier.config.js` - Prettier configuration
+- `components.json` - Shadcn UI configuration (New York style)
+- `src/config/mongodb.ts` - Centralized MongoDB configuration
+
+## Project Statistics
+
+- **Source files**: 34 TypeScript/TSX files
+- **Components**: 7 custom + 11 Shadcn UI components
+- **Routes**: 3 (root, index, todos)
+- **Server functions**: 4 (getTodos, createTodo, updateTodo, deleteTodo)
+- **Custom hooks**: 4 (useGetTodos, useCreateTodo, useUpdateTodo, useDeleteTodo)
