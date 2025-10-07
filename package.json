@@ -35,7 +35,9 @@
     "lint": "eslint",
     "format": "prettier",
     "check": "prettier --write . && eslint --fix",
-    "init-db": "node scripts/init-db.ts"
+    "init-db": "node scripts/init-db.ts",
+    "deploy": "pnpm build && pnpm netlify deploy --prod",
+    "deploy:preview": "pnpm build && pnpm netlify deploy"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",
