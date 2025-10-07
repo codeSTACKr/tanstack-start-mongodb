@@ -15,9 +15,9 @@
  */
 
 import { MongoClient } from 'mongodb'
+import { COLLECTION_NAME, DB_NAME, MONGODB_CONNECTION_CONFIG } from '../config/mongodb'
 import type { Collection, Db } from 'mongodb'
 import type { Todo } from './types'
-import { DB_NAME, COLLECTION_NAME, MONGODB_CONNECTION_CONFIG } from '../config/mongodb'
 
 const MONGODB_URI = process.env.MONGODB_URI
 
