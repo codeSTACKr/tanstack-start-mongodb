@@ -14,10 +14,16 @@
  * 4. Handle connection errors gracefully
  */
 
+import { EventEmitter } from 'events'
 import { MongoClient } from 'mongodb'
 import type { Collection, Db } from 'mongodb'
 import type { Todo } from './types'
 import { DB_NAME, COLLECTION_NAME, MONGODB_CONNECTION_CONFIG } from '../config/mongodb'
+
+// Increase the default max listeners for all EventEmitters to prevent warnings
+// MongoDB driver creates multiple internal EventEmitters (Topology, monitoring, etc.)
+// that legitimately need more than the default 10 listeners in persistent connection scenarios
+EventEmitter.defaultMaxListeners = 20
 
 const MONGODB_URI = process.env.MONGODB_URI
 
