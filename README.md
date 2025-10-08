@@ -4,6 +4,9 @@ A full-stack demonstration of **MongoDB** integration with **TanStack Start**, f
 
 ![TanStack Start + MongoDB](https://img.shields.io/badge/TanStack-Start-FF4154?style=flat-square) ![MongoDB](https://img.shields.io/badge/MongoDB-Native-47A248?style=flat-square) ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square)
 
+![Home Page Screenshot](public/screenshot.png)
+🔗 [Live Demo](https://tanstack-start-mongodb.netlify.app/)
+
 ## ✨ Features
 
 - 🔒 **End-to-end type safety** from MongoDB → Server functions → React components
