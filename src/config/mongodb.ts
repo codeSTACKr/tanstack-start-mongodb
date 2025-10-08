@@ -23,4 +23,6 @@ export const MONGODB_CONNECTION_CONFIG = {
   maxPoolSize: 1, // Cloudflare Workers: Use minimal pooling (1 connection)
   minPoolSize: 0, // Cloudflare Workers: No minimum connections
   serverSelectionTimeoutMS: 5000, // Timeout after 5s if can't find server
+  connectTimeoutMS: 10000, // Timeout for initial connection (10s)
+  socketTimeoutMS: 45000, // Timeout for socket operations (45s)
 } as const
