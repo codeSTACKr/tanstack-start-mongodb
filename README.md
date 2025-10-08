@@ -42,7 +42,7 @@ A full-stack demonstration of **MongoDB** integration with **TanStack Start**, f
 
    ```bash
    git clone <your-repo-url>
-   cd fresh-start
+   cd tanstack-start-mongodb
    pnpm install
    ```
 
