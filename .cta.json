@@ -1,5 +1,5 @@
 {
-  "projectName": "fresh-start",
+  "projectName": "tanstack-start-mongodb",
   "mode": "file-router",
   "typescript": true,
   "tailwind": true,
